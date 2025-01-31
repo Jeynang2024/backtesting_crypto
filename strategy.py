@@ -10,38 +10,68 @@ class MovingAverageCrossover(bt.Strategy):
         ('rsi_period',14),
         ('rsi_overbought',70),
         ('rsi_oversold',30),
+        ('stop_loss', 0.02),  
+        ('take_profit', 0.05)
     )
 
     def __init__(self):
-        self.short_period = self.params.short_period
-        self.long_period = self.params.long_period
-        self.rsi_period = self.params.rsi_period
-        self.rsi_overbought = self.params.rsi_overbought
-        self.rsi_oversold = self.params.rsi_oversold
         self.short_sma = bt.indicators.MovingAverageSimple(self.data.close,period = self.short_period)
         self.long_sma = bt.indicators.MovingAverageSimple(self.data.close,period = self.long_period)
+        self.rsi = bt.indicators.RSI(self.data.close, period=self.params.rsi_period)
     
     def next(self):
-        if self.short_sma > self.long_sma and not self.position:
-            self.buy()
-        elif self.short_sma < self.long_sma and not self.position:
-            self.sell()
+        if self.short_sma[0] > self.long_sma[0] and self.rsi[0] < self.params.rsi_oversold:
+            
+            if not self.position:
+                self.buy_price = self.data.close[0]
+                self.buy()
+                print(f"BUY at {self.buy_price}")
+        elif self.short_sma[0] < self.long_sma[0] and self.rsi[0] > self.params.rsi_overbought:
+            
+            if self.position:
+                self.sell()
+                print(f"SELL at {self.data.close[0]}")
+        if self.position:
+            current_price =self.data.close[0]
+            stop_loss_price = self.buy_price*(1-self.params.stop_loss)
+            take_profit_price = self.buy_price * (1 + self.params.take_profit)
+            if current_price <= stop_loss_price:
+                self.sell()
+                print(f"STOP-LOSS triggered at {current_price}")
 
+            elif current_price >= take_profit_price:
+                self.sell()
+                print(f"TAKE-PROFIT triggered at {current_price}")
 # momentum strategy
 
 class MomentumStrategy(bt.Strategy):
     params = (
         ('momentum_period',100),
         ('roc_threshold', 0),
+        ('stop_loss', 0.02),  
+        ('take_profit', 0.05)
     )
 
     def __init__(self):
         self.roc = bt.indicators.RateOfChange(self.data.close,period = self.params.momentum_period)
+  
+    
     def next(self):
         if self.roc[0] > self.params.roc_threshold and not self.position:
             self.buy()
         elif self.roc[0] < self.params.roc_threshold and self.position:
             self.sell()
+        if self.position:
+            current_price =self.data.close[0]
+            stop_loss_price = self.buy_price*(1-self.params.stop_loss)
+            take_profit_price = self.buy_price * (1 + self.params.take_profit)
+            if current_price <= stop_loss_price:
+                self.sell()
+                print(f"STOP-LOSS triggered at {current_price}")
+
+            elif current_price >= take_profit_price:
+                self.sell()
+                print(f"TAKE-PROFIT triggered at {current_price}")
 
 
 
@@ -52,13 +82,15 @@ class MeanReversion(bt.Strategy):
         ('bollinger_dev', 2),
         ('rsi_period', 14),
         ('rsi_oversold', 30),
-        ('rsi_overbought', 70)
+        ('rsi_overbought', 70),
+        ('stop_loss', 0.02),  
+        ('take_profit', 0.05)
     )
 
     def __init__(self):
         self.bollinger = bt.indicators.BollingerBands(self.data.close, period=self.params.bollinger_period, devfactor=self.params.bollinger_dev)
         self.rsi = bt.indicators.RSI(self.data.close, period=self.params.rsi_period)
-
+  
     def next(self):
         if self.data.close[0] < self.bollinger.bot[0] and self.rsi[0] < self.params.rsi_oversold:
             if not self.position:
@@ -66,4 +98,15 @@ class MeanReversion(bt.Strategy):
         elif self.data.close[0] > self.bollinger.top[0] and self.rsi[0] > self.params.rsi_overbought:
             if self.position:
                 self.sell()
+        if self.position:
+            current_price =self.data.close[0]
+            stop_loss_price = self.buy_price*(1-self.params.stop_loss)
+            take_profit_price = self.buy_price * (1 + self.params.take_profit)
+            if current_price <= stop_loss_price:
+                self.sell()
+                print(f"STOP-LOSS triggered at {current_price}")
+
+            elif current_price >= take_profit_price:
+                self.sell()
+                print(f"TAKE-PROFIT triggered at {current_price}")
 
