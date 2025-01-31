@@ -6,12 +6,7 @@ warnings.filterwarnings('ignore')
 from strategy import *
 from main import *
 from live_trade import *
-#def stop1():
- #   ws.close()
- #   return "Live trading stopped."
-    
 
-# Global event to control WebSocket thread
 stop_event = threading.Event()
 def stop1():
     stop_event.set()  # Signal the thread to stop
@@ -123,16 +118,15 @@ def main():
 
                 }
             
-                startdate=pd.to_datetime(st.date_input("Start date"))
-                enddate=pd.to_datetime(st.date_input("End date"))
-                if st.button("Run Backtest"):
-                    st.write("Running portfolio backtest... Please wait.")
-                    cerebro= run_backtest(strategy_class,strategy_params,symbol,money,startdate,enddate,interval)
+            startdate=pd.to_datetime(st.date_input("Start date"))
+            enddate=pd.to_datetime(st.date_input("End date"))
+            if st.sidebar.button("Run Backtest"):
+                st.write("Running portfolio backtest... Please wait.")
+                cerebro= run_backtest(strategy_class,strategy_params,symbol,money,startdate,enddate,interval)
                         
                         
-                        # Display the plot image in col2
-                    with col2:
-                        cerebro.plot()
+                with col2:
+                    cerebro.plot()
         else:
             live_strategy=st.sidebar.selectbox("choose:",("RSI","MOVING AVERAGE"))
             pla=st.sidebar.empty()
@@ -151,7 +145,6 @@ def main():
                         
                     real_call(moving_average,money,70,30,14,trade_q,symbol,pla,plaa,0) 
             else:
-                #period =st.number_input("Enter from which time u want to start",value=30)
                 trade_q=st.number_input("Eenter trade quantity",value =0.05)
 
                 if st.sidebar.button("Stop Live Trading"):
@@ -161,7 +154,6 @@ def main():
                     
                     real_call(moving_average,money,70,30,14,trade_q,symbol,pla,plaa,0) 
    
-                    #threading.Thread(target=real_call, args=(moving_average, money, 70, 30, 14, trade_q, symbol, pla, plaa, 0)).start()
                         
 
                 
