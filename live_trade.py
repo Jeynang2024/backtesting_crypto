@@ -8,16 +8,10 @@ import config
 import streamlit as st
 import threading
 import pandas as pd
-from queue import Queue
-
-# Global queue for communication between threads
-data_queue = Queue()
 ws=None
-# WebSocket for Binance ETH/USDT 1-minute candles
 socket = "wss://stream.binance.com:9443/ws/"
 later="@kline_1m"
 
-# Trading variables
 closes = []
 client = Client(config.API_KEY, config.SECRET_KEY, testnet=True)
 in_position = False
@@ -29,13 +23,11 @@ rsi_oversold = 30
 trade_quantity = 0.05
 trade_symbol = "ETHUSDT"
 
-# Streamlit UI elements
 
 rsi_placeholder = st.sidebar.empty()
 cur_money = st.sidebar.empty()
 action_placeholder = st.sidebar.empty()
 
-# Function to calculate profit/loss
 def calculating_total_profit(side, amount):
     global initial_cash, current_cash
     if side == SIDE_SELL:
@@ -46,7 +38,6 @@ def calculating_total_profit(side, amount):
         current_cash -= amount
         cur_money.write(f"Current Cash: {current_cash}")
 
-# Function to place an order
 def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
     try:
         print("Sending order...")
@@ -62,10 +53,10 @@ def order(side, quantity, symbol, order_type=ORDER_TYPE_MARKET):
         return False
     return True
 
-# Function to fetch historical data for RSI calculation
+
 def fetch_historic_data(symbol, interval, lookback):
     candles = client.get_historical_klines(symbol, interval, lookback)
-    historical_closes = [float(candle[4]) for candle in candles]  # Close prices are in the 5th column
+    historical_closes = [float(candle[4]) for candle in candles]  
     return historical_closes
 
 
@@ -75,7 +66,7 @@ short_period=9
 long_period=200
 live_data = pd.DataFrame(columns=['timestamp', 'close'])
 
-last_signal = None  # Track the last signal to avoid duplicates
+last_signal = None  
 
     
     
@@ -84,88 +75,86 @@ def MOVING_AVERAGE(ws, message):
     global live_data, last_signal
     data = json.loads(message)
     print("recieved")
-    timestamp = pd.to_datetime(data['E'], unit='ms')  # Event time
-    close_price = float(data['k']['c'])  # Closing price
+    timestamp = pd.to_datetime(data['E'], unit='ms')  
+    close_price = float(data['k']['c'])  
 
-    # Add data to DataFrame
     new_row = {'timestamp': timestamp, 'close': close_price}
     live_data = pd.concat([live_data, pd.DataFrame([new_row])], ignore_index=True)
 
-    # Keep only the last 500 rows for efficiency
     live_data = live_data.iloc[-500:]
 
-    # Calculate moving averages if we have enough data
     if len(live_data) >= long_period:
         live_data['SMA_Short'] = talib.SMA(live_data['close'], timeperiod=short_period)
         live_data['SMA_Long'] = talib.SMA(live_data['close'], timeperiod=long_period)
 
-        # Check for crossover signals
         last_row = live_data.iloc[-1]
         prev_row = live_data.iloc[-2] if len(live_data) > 1 else None
 
         if prev_row is not None:
-            # Check for a buy signal (short MA crosses above long MA)
             if (prev_row['SMA_Short'] <= prev_row['SMA_Long']) and (last_row['SMA_Short'] > last_row['SMA_Long']):
                 if last_signal != "BUY":
-                    #order_succeeded =True# order(SIDE_BUY, trade_quantity, trade_symbol)
-                    #if order_succeeded:
-                        
-                    print(f"BUY Signal at {last_row['timestamp']} - Price: {last_row['close']}")
-                    action_placeholder.write(f"BUY Signal at {last_row['timestamp']} - Price: {last_row['close']}")
-                    last_signal = "BUY"
+                    order_succeeded =order(SIDE_BUY, trade_quantity, trade_symbol)
+                    if order_succeeded:
+                            
+                        print(f"BUY Signal at {last_row['timestamp']} - Price: {last_row['close']}")
+                        action_placeholder.write(f"BUY Signal at {last_row['timestamp']} - Price: {last_row['close']}")
+                        last_signal = "BUY"
 
-            # Check for a sell signal (short MA crosses below long MA)
             elif (prev_row['SMA_Short'] >= prev_row['SMA_Long']) and (last_row['SMA_Short'] < last_row['SMA_Long']):
                 if last_signal != "SELL":
-                    #order_succeeded =True# order(SIDE_SELL, trade_quantity, trade_symbol)
-                    #if order_succeeded:
+                    order_succeeded =order(SIDE_SELL, trade_quantity, trade_symbol)
+                    if order_succeeded:
                         
-                    print(f"SELL Signal at {last_row['timestamp']} - Price: {last_row['close']}")
-                    action_placeholder.write(f"SELL Signal at {last_row['timestamp']} - Price: {last_row['close']}")
-                    last_signal = "SELL"
+                        print(f"SELL Signal at {last_row['timestamp']} - Price: {last_row['close']}")
+                        action_placeholder.write(f"SELL Signal at {last_row['timestamp']} - Price: {last_row['close']}")
+                        last_signal = "SELL"
 
 
 
 
 
 
-# Function to handle incoming WebSocket messages
 def RSI(ws, message):
     global closes, in_position
     message = json.loads(message)
     print("recieved")
-    if "k" in message and message["k"]["x"]:  # Check if the candle is closed
-        close = message['k']['c']  # Close price of the candle
-        closes.append(float(close))  # Append the close price to our list of closes
+    if "k" in message and message["k"]["x"]:  
+        close = message['k']['c']  
+        closes.append(float(close))  
 
         if len(closes) > rsi_period:
             np_closes = np.array(closes)
             rsi = talib.RSI(np_closes, rsi_period)
             last_rsi = rsi[-1]
             print(last_rsi)
-            rsi_placeholder.write("RSI",last_rsi)
-            data_queue.put(("RSI", last_rsi))
-            # Buy/Sell logic based on RSI
+            rsi_placeholder.write(f"Current RSI: {last_rsi}")
+
             if last_rsi > rsi_overbought:
+                print("entered")
                 if in_position:
-                    data_queue.put(("ACTION", "Sell!! Sell!!"))                    
-                    order_succeeded =True# order(SIDE_SELL, trade_quantity, trade_symbol)
+                    action_placeholder.write("Sell!! Sell!!")
+                    print("SELL SELL!!")
+                    order_succeeded =order(SIDE_SELL, trade_quantity, trade_symbol)
                     if order_succeeded:
                         in_position = False
                 else:
-                    data_queue.put(("ACTION", "A sell signal, but you have not bought any now."))            
+                    print("A sell signal , but you have not bought any now.")
+                    action_placeholder.write("A sell signal , but you have not bought any now.")
             elif last_rsi < rsi_oversold:
+                print("enter")
                 if in_position:
-                    data_queue.put(("ACTION", "A buy signal but You already own it!"))                
+                    print("A buy signal but You already own it!")
+
+                    action_placeholder.write("A buy signal but You already own it!")
                 else:
-                    data_queue.put(("ACTION", "Buy! Buy!"))                   
-                    order_succeeded =True# order(SIDE_BUY, trade_quantity, trade_symbol)
+                    print("BUY BUY!!")
+                    action_placeholder.write("Buy! Buy!")
+                    order_succeeded =order(SIDE_BUY, trade_quantity, trade_symbol)
                     if order_succeeded:
                         in_position = True
 
        
 
-# Function to start WebSocket
 def initialize_live_data(symbol, interval, lookback):
     global live_data
     candles = client.get_historical_klines(symbol, interval, lookback)
@@ -175,7 +164,6 @@ def initialize_live_data(symbol, interval, lookback):
     }
     live_data = pd.DataFrame(data)
 
-# Real-time call to initiate WebSocket and fetch historical data
 def real_call(on_message, money, rsi_o, rsi_s, rsi_p, tr_q, sym,pla,plaa,lookback):
     global initial_cash, current_cash, rsi_overbought, rsi_oversold, rsi_period, trade_quantity, trade_symbol,rsi_placeholder,action_placeholder,live_data
     initial_cash = money
@@ -200,11 +188,10 @@ def real_call(on_message, money, rsi_o, rsi_s, rsi_p, tr_q, sym,pla,plaa,lookbac
 
 
         historical_closes = fetch_historic_data(trade_symbol, Client.KLINE_INTERVAL_1MINUTE, f"{rsi_period} minutes ago UTC")
-        closes.extend(historical_closes)  # Add the historical closes to the list
+        closes.extend(historical_closes)  
     global ws
     socket1 = f"{socket}{sym.lower()}{later}"
     ws = websocket.WebSocketApp(socket1 ,on_message = on_message)
     ws.run_forever()
 
 
-# Thread to run WebSocket in the background
