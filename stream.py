@@ -6,12 +6,28 @@ warnings.filterwarnings('ignore')
 from strategy import *
 from main import *
 from live_trade import *
+from queue import Queue
 
+# Global queue for communication between threads
+data_queue = Queue()
+#def stop1():
+ #   ws.close()
+ #   return "Live trading stopped."
+    
+
+# Global event to control WebSocket thread
 stop_event = threading.Event()
+#def stop1():
+ #   stop_event.set()  # Signal the thread to stop
+  #  if 'ws' in globals():
+   #     ws.close()  # Close WebSocket connection if it's open
+    #    return "Live trading stopped."'''
 def stop1():
-    stop_event.set()  # Signal the thread to stop
-    if 'ws' in globals():
-        ws.close()  # Close WebSocket connection if it's open
+    stop_event.set() 
+    if ws and hasattr(ws, 'close'):  # Check if ws is not None and has 'close' attribute
+        ws.close()
+    else:
+        print("WebSocket is either None or doesn't have a close method.")
     return "Live trading stopped."
 #st.set_page_config(page_title="Testing And Trading", page_icon=":chart_with_upwards_trend:",layout="wide")
 def you(client):
@@ -125,12 +141,13 @@ def main():
                 cerebro= run_backtest(strategy_class,strategy_params,symbol,money,startdate,enddate,interval)
                         
                         
+                        # Display the plot image in col2
                 with col2:
                     cerebro.plot()
         else:
-            live_strategy=st.sidebar.selectbox("choose:",("RSI","MOVING AVERAGE"))
-            pla=st.sidebar.empty()
-            plaa=st.sidebar.empty()
+            live_strategy=st.sidebar.selectbox("choose:",("RSI","MOVING_AVERAGE"))
+            pla = st.sidebar.empty()  # Placeholder for RSI
+            plaa = st.sidebar.empty()
             if live_strategy=="RSI":
 
                 rsi_p=st.number_input("Enter RSI period Value",value=14)
@@ -142,20 +159,27 @@ def main():
                 if st.button("Start Live Trading"):
                     stop_event.clear()  # Reset the stop event
                     
-                        
-                    real_call(moving_average,money,70,30,14,trade_q,symbol,pla,plaa,0) 
+                    threading.Thread(target=real_call, args=(RSI, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start() 
+                    #real_call("RSI",money,rsi_ob,rsi_os,rsi_p,trade_q,symbol,pla,plaa,0) 
             else:
+                #period =st.number_input("Enter from which time u want to start",value=30)
                 trade_q=st.number_input("Eenter trade quantity",value =0.05)
 
                 if st.sidebar.button("Stop Live Trading"):
                         st.write(stop1())
                 if st.button("Start Live Trading"):
                     stop_event.clear()  # Reset the stop event
-                    
-                    real_call(moving_average,money,70,30,14,trade_q,symbol,pla,plaa,0) 
+                    threading.Thread(target=real_call, args=(MOVING_AVERAGE, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start()
+                    #real_call("MOVING_AVERAGE",money,70,30,14,trade_q,symbol,pla,plaa,0) 
    
+                    #threading.Thread(target=real_call, args=(moving_average, money, 70, 30, 14, trade_q, symbol, pla, plaa, 0)).start()
                         
-
+    while not data_queue.empty():
+        data_type, data_value = data_queue.get()
+        if data_type == "RSI":
+            pla.write(f"Current RSI: {data_value}")
+        elif data_type == "ACTION":
+            plaa.write(data_value)
                 
                   
 
