@@ -5,6 +5,6 @@ pandas
 backtrader
 websocket-client
 numpy
-ta
+talib
 python-binance
 
