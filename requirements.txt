@@ -1,10 +1,10 @@
+
 streamlit
-plotly.express 
+plotly
 pandas
 backtrader
-websocket
-json
-numpy 
-talib
-binance.client 
-binance.enums 
+websocket-client
+numpy
+TA-Lib
+python-binance
+
