@@ -1,12 +1,12 @@
 import websocket
 import json
 import numpy as np
-import talib
+import ta
 from binance.client import Client
 from binance.enums import *
 import config
 import streamlit as st
-import threading
+
 import pandas as pd
 ws=None
 socket = "wss://stream.binance.com:9443/ws/"
