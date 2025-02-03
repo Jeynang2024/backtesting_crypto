@@ -1,30 +1,18 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-import warnings
-warnings.filterwarnings('ignore')
+
 from strategy import *
 from main import *
 from live_trade import *
-from queue import Queue
 
-# Global queue for communication between threads
-data_queue = Queue()
-#def stop1():
- #   ws.close()
- #   return "Live trading stopped."
-    
 
-# Global event to control WebSocket thread
+
 stop_event = threading.Event()
-#def stop1():
- #   stop_event.set()  # Signal the thread to stop
-  #  if 'ws' in globals():
-   #     ws.close()  # Close WebSocket connection if it's open
-    #    return "Live trading stopped."'''
+
 def stop1():
     stop_event.set() 
-    if ws and hasattr(ws, 'close'):  # Check if ws is not None and has 'close' attribute
+    if ws and hasattr(ws, 'close'): 
         ws.close()
     else:
         print("WebSocket is either None or doesn't have a close method.")
@@ -68,8 +56,8 @@ def main():
         fig = px.bar(df, x='name', y='available', text='available', labels={'available': 'Available Balance', 'name': 'Asset'})
         fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
         fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', 
-            width=1200,  # Adjust width of the plot
-            height=300,  # Adjust height of the plot
+            width=1200,  
+            height=300,  
             margin=dict(t=10) )
         st.plotly_chart(fig, use_container_width=True)
         st.sidebar.dataframe(df.style.highlight_max(axis=0, color='lightgreen'), width=800)
@@ -141,12 +129,12 @@ def main():
                 cerebro= run_backtest(strategy_class,strategy_params,symbol,money,startdate,enddate,interval)
                         
                         
-                        # Display the plot image in col2
+                        
                 with col2:
                     cerebro.plot()
         else:
             live_strategy=st.sidebar.selectbox("choose:",("RSI","MOVING_AVERAGE"))
-            pla = st.sidebar.empty()  # Placeholder for RSI
+            pla = st.sidebar.empty() 
             plaa = st.sidebar.empty()
             if live_strategy=="RSI":
 
@@ -157,29 +145,24 @@ def main():
                 if st.sidebar.button("Stop Live Trading"):
                         st.write(stop1())
                 if st.button("Start Live Trading"):
-                    stop_event.clear()  # Reset the stop event
+                    stop_event.clear()  
                     
-                    threading.Thread(target=real_call, args=(RSI, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start() 
-                    #real_call("RSI",money,rsi_ob,rsi_os,rsi_p,trade_q,symbol,pla,plaa,0) 
+                    #threading.Thread(target=real_call, args=(RSI, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start() 
+                    real_call(RSI,money,rsi_ob,rsi_os,rsi_p,trade_q,symbol,pla,plaa,0) 
             else:
-                #period =st.number_input("Enter from which time u want to start",value=30)
+           
                 trade_q=st.number_input("Eenter trade quantity",value =0.05)
 
                 if st.sidebar.button("Stop Live Trading"):
                         st.write(stop1())
                 if st.button("Start Live Trading"):
-                    stop_event.clear()  # Reset the stop event
-                    threading.Thread(target=real_call, args=(MOVING_AVERAGE, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start()
-                    #real_call("MOVING_AVERAGE",money,70,30,14,trade_q,symbol,pla,plaa,0) 
+                    stop_event.clear()  
+                    #threading.Thread(target=real_call, args=(MOVING_AVERAGE, money, rsi_ob, rsi_os, rsi_p, trade_q, symbol, pla, plaa, 0)).start()
+                    real_call(MOVING_AVERAGE,money,70,30,14,trade_q,symbol,pla,plaa,0) 
    
                     #threading.Thread(target=real_call, args=(moving_average, money, 70, 30, 14, trade_q, symbol, pla, plaa, 0)).start()
                         
-    while not data_queue.empty():
-        data_type, data_value = data_queue.get()
-        if data_type == "RSI":
-            pla.write(f"Current RSI: {data_value}")
-        elif data_type == "ACTION":
-            plaa.write(data_value)
+ 
                 
                   
 
