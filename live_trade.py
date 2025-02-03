@@ -1,7 +1,7 @@
 import websocket
 import json
 import numpy as np
-import ta
+import talib
 from binance.client import Client
 from binance.enums import *
 import config
