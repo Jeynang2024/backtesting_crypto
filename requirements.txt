@@ -1,0 +1,11 @@
+streamlit
+plotly.express 
+pandas
+warnings
+backtrader
+websocket
+json
+numpy 
+talib
+binance.client 
+binance.enums 
