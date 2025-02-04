@@ -1,4 +1,4 @@
-# backtesting_crypto
+# Backtesting_Crypto
 
 
 This project is a cryptocurrency trading bot designed to execute buy and sell orders using the Binance API and technical indicators such as RSI and Moving Averages (MA). The bot supports real-time trading on the Binance Testnet and includes a backtesting module using historical data.
