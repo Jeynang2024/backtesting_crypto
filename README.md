@@ -2,6 +2,7 @@
 
 
 This project is a cryptocurrency trading bot designed to execute buy and sell orders using the Binance API and technical indicators such as RSI and Moving Averages (MA). The bot supports real-time trading on the Binance Testnet and includes a backtesting module using historical data.
+
 ![Front page](images/front_page.png)
 
 
@@ -35,7 +36,7 @@ pip install -r requirements.txt
 ## Usage
 Run the bot locally:
 ```bash
-streamlit run app.py
+streamlit run stream.py
 ```
 
 ### Important Notes
