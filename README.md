@@ -22,6 +22,15 @@ pip install -r requirements.txt
 ## Requirements
 - **TA-Lib Installation**: Download and install TA-Lib manually before running the bot. Follow the official [TA-Lib documentation](https://mrjbq7.github.io/ta-lib/) for installation.
 - **Binance API Access**: Requires a Binance API key with testnet access.
+  
+ you can also  add your Binance Testnet API credentials in the `config.py` file.
+
+1. Open the `config.py` file in your project.
+2. Add your API keys like this:
+   ```python
+   API_KEY = "your_binance_testnet_api_key"
+   SECRET_KEY = "your_binance_testnet_secret_key"
+
 
 ## Usage
 Run the bot locally:
@@ -40,10 +49,17 @@ Below is an example of a BUY signal being triggered:
 ## Backtesting
 The project includes a backtesting module that evaluates strategies against historical market data.
 
+ **Indicators Used**:
+  - Moving average crossover with rsi indicator
+  - Momentum strategy with rate of change indicator
+  - Mean Reversion strategy with bollinger and rsi indicators
+
+
+
 ![Backtesting](images/graph.png)
 
 ## Future Enhancements
-- Implementing additional indicators like MACD
+- Implementing additional indicators
 - Support for multiple trading pairs
 - Integration with a database for trade logging
 
