@@ -2,7 +2,7 @@
 
 
 This project is a cryptocurrency trading bot designed to execute buy and sell orders using the Binance API and technical indicators such as RSI and Moving Averages (MA). The bot supports real-time trading on the Binance Testnet and includes a backtesting module using historical data.
-![Front page](images/buy_signal.png)
+![Front page](images/front_page.png)
 
 
 ## Features
@@ -40,7 +40,7 @@ Below is an example of a BUY signal being triggered:
 ## Backtesting
 The project includes a backtesting module that evaluates strategies against historical market data.
 
-![Backtesting](images/backtesting.png)
+![Backtesting](images/graph.png)
 
 ## Future Enhancements
 - Implementing additional indicators like MACD
