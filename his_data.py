@@ -5,9 +5,10 @@ import config
 client = Client(config.API_KEY,config.SECRET_KEY)
 def fetch_historical_data(symbol,client,start,end,interval):
     ''' klines_data =client.get_historical_klines(symbol,'1h','30 days ago UTC')'''
+    print("fetching")
     start_str = start.strftime('%Y-%m-%d %H:%M:%S')  # e.g., '2023-01-01 00:00:00'
     end_str = end.strftime('%Y-%m-%d %H:%M:%S')      # e.g., '2023-01-15 00:00:00'
-
+    
     # Fetch historical klines (candlestick data)
     klines_data = client.get_historical_klines(symbol, interval, start_str, end_str)
 
